@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>語彙帖 — N2 Vocabulary Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#E7E2D4; --paper-deep:#DCD5C2; --ink:#20293A; --ink-soft:#4B5A6E;
+    --indigo:#33506E; --indigo-soft:#6E8CA6; --line:#C7BFA8; --seal:#B8401B;
+    --seal-soft:#D9714B; --gold:#A9812F; --card-back:#1C2A3D; --card-back-2:#233650;
+    --good:#3E6E4E;
+    --font-display:'Shippori Mincho','Hiragino Mincho ProN','Yu Mincho',serif;
+    --font-body:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;padding:0;background:transparent;}
+  #app{font-family:var(--font-body);color:var(--ink);background:var(--paper);
+    background-image:repeating-linear-gradient(0deg, rgba(32,41,58,0.025) 0px, rgba(32,41,58,0.025) 1px, transparent 1px, transparent 34px);
+    min-height:100vh;padding:0 0 60px 0;}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 20px 0;}
+  header.top{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--ink);
+    padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+  .wordmark{display:flex;align-items:baseline;gap:12px;}
+  .wordmark h1{font-family:var(--font-display);font-weight:700;font-size:30px;margin:0;letter-spacing:0.04em;}
+  .wordmark .sub{font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-soft);}
+  nav.tabs{display:flex;gap:2px;background:var(--paper-deep);border:1px solid var(--line);border-radius:8px;padding:3px;overflow-x:auto;}
+  nav.tabs button{font-family:var(--font-body);font-weight:700;font-size:13px;background:transparent;border:none;
+    color:var(--ink-soft);padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .15s ease;white-space:nowrap;}
+  nav.tabs button.active{background:var(--ink);color:var(--paper);}
+  nav.tabs button:hover:not(.active){color:var(--ink);}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+  .stat{background:var(--paper-deep);border:1px solid var(--line);border-radius:10px;padding:14px 12px;position:relative;overflow:hidden;}
+  .stat .num{font-family:var(--font-mono);font-size:26px;font-weight:600;color:var(--ink);}
+  .stat .lbl-jp{font-family:var(--font-display);font-size:13px;color:var(--indigo);margin-top:2px;}
+  .stat .lbl-en{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-soft);}
+  .stat.due .num{color:var(--seal);} .stat.mastered .num{color:var(--gold);}
+  .cta{display:block;width:100%;text-align:center;background:var(--ink);color:var(--paper);border:none;
+    font-family:var(--font-display);font-weight:700;font-size:18px;padding:18px;border-radius:10px;cursor:pointer;
+    letter-spacing:0.03em;margin-bottom:16px;transition:transform .1s ease, background .15s ease;}
+  .cta:hover{background:var(--indigo);} .cta:active{transform:scale(0.99);}
+  .cta.secondary{background:transparent;color:var(--ink);border:1.5px solid var(--ink);font-size:15px;padding:12px;}
+  .cta.secondary:hover{background:var(--ink);color:var(--paper);}
+  .cta:disabled{opacity:0.45;cursor:not-allowed;background:var(--ink-soft);}
+  .panel{background:var(--paper-deep);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:16px;}
+  .panel h2{font-family:var(--font-display);font-size:18px;margin:0 0 10px;color:var(--ink);}
+  .muted{color:var(--ink-soft);font-size:13px;line-height:1.6;}
+  .hanko{position:absolute;top:10px;right:10px;width:34px;height:34px;border:2.5px solid var(--seal);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--seal);font-family:var(--font-display);
+    font-weight:700;font-size:11px;transform:rotate(-8deg);opacity:0.9;}
+  .hanko.big{width:78px;height:78px;font-size:22px;border-width:4px;position:static;transform:rotate(-6deg);
+    margin:0 auto 10px;animation:stamp .35s ease;}
+  @keyframes stamp{from{transform:scale(1.6) rotate(-6deg);opacity:0;}to{transform:scale(1) rotate(-6deg);opacity:0.9;}}
+  .stage{display:flex;flex-direction:column;align-items:center;padding:10px 0 20px;}
+  .progress{font-family:var(--font-mono);font-size:12px;color:var(--ink-soft);margin-bottom:6px;letter-spacing:0.05em;}
+  .topic-banner{font-size:12px;color:var(--indigo);margin-bottom:14px;font-weight:700;letter-spacing:0.02em;}
+  .card-scene{width:100%;max-width:460px;height:320px;perspective:1400px;margin-bottom:22px;}
+  .card{position:relative;width:100%;height:100%;transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.4,.2,.2,1);cursor:pointer;}
+  .card.flipped{transform:rotateY(180deg);}
+  .face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;text-align:center;}
+  .face.front{background:var(--card-back);color:var(--paper);box-shadow:0 8px 24px rgba(28,42,61,0.3);
+    border:1px solid rgba(255,255,255,0.06);}
+  .face.back{background:var(--paper);color:var(--ink);transform:rotateY(180deg);border:1.5px solid var(--ink);}
+  .chip-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;justify-content:center;}
+  .pos-chip{font-family:var(--font-mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;
+    background:rgba(255,255,255,0.1);color:var(--indigo-soft);padding:3px 9px;border-radius:100px;}
+  .topic-chip{font-family:var(--font-body);font-size:10.5px;background:rgba(255,255,255,0.1);
+    color:var(--seal-soft);padding:3px 10px;border-radius:100px;}
+  .face.back .pos-chip{background:var(--paper);border:1px solid var(--line);color:var(--indigo);}
+  .face.back .topic-chip{background:var(--paper);border:1px solid var(--seal);color:var(--seal);}
+  .kana-top{font-size:14px;color:var(--indigo-soft);margin-bottom:6px;letter-spacing:0.06em;}
+  .kanji-big{font-family:var(--font-display);font-size:42px;font-weight:600;line-height:1.2;}
+  .kanji-row{display:flex;align-items:center;gap:10px;}
+  .hint{position:absolute;bottom:14px;font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.08em;}
+  .meaning-big{font-family:var(--font-display);font-size:20px;font-weight:600;margin-bottom:8px;}
+  .kana-sub{font-size:13px;color:var(--ink-soft);margin-bottom:2px;}
+  .example-box{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);width:100%;}
+  .example-jp{font-size:14.5px;line-height:1.6;display:flex;align-items:flex-start;gap:6px;justify-content:center;}
+  .example-en{font-size:11.5px;color:var(--ink-soft);margin-top:3px;}
+  .spk-btn{background:none;border:none;cursor:pointer;font-size:15px;line-height:1;padding:2px 4px;
+    color:inherit;opacity:0.75;flex-shrink:0;}
+  .spk-btn:hover{opacity:1;}
+  .grade-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:100%;max-width:460px;}
+  .grade-row button{font-family:var(--font-body);font-weight:700;font-size:13px;border:none;border-radius:9px;
+    padding:13px 4px;cursor:pointer;color:#fff;transition:transform .1s ease;}
+  .grade-row button:hover{transform:translateY(-2px);}
+  .g-again{background:var(--seal);} .g-hard{background:#8a6a3a;} .g-good{background:var(--good);} .g-easy{background:var(--indigo);}
+  .grade-sub{display:block;font-weight:400;font-size:10px;opacity:0.8;margin-top:2px;}
+  .flip-tip{font-size:12px;color:var(--ink-soft);margin-bottom:10px;}
+  .quiz-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .score-chip{font-family:var(--font-mono);font-size:13px;background:var(--paper-deep);border:1px solid var(--line);padding:6px 12px;border-radius:100px;}
+  .quiz-card{background:var(--card-back);color:var(--paper);border-radius:16px;padding:32px 24px;text-align:center;margin-bottom:16px;}
+  .quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .quiz-options button{text-align:left;font-family:var(--font-body);font-size:14px;font-weight:500;
+    background:var(--paper-deep);border:1.5px solid var(--line);border-radius:10px;padding:14px;cursor:pointer;
+    color:var(--ink);transition:all .12s ease;}
+  .quiz-options button:hover:not(:disabled){border-color:var(--indigo);}
+  .quiz-options button.correct{background:var(--good);border-color:var(--good);color:#fff;}
+  .quiz-options button.wrong{background:var(--seal);border-color:var(--seal);color:#fff;}
+  .quiz-options button:disabled{cursor:default;}
+  .quiz-example{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.15);font-size:13px;color:rgba(231,226,212,0.75);}
+  .filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .search-bar{flex:1;min-width:180px;padding:12px 14px;border-radius:9px;border:1.5px solid var(--line);
+    background:var(--paper-deep);color:var(--ink);font-family:var(--font-body);font-size:14px;}
+  .search-bar:focus{outline:none;border-color:var(--indigo);}
+  select.topic-select{padding:12px 10px;border-radius:9px;border:1.5px solid var(--line);background:var(--paper-deep);
+    color:var(--ink);font-family:var(--font-body);font-size:13px;}
+  .word-row{display:flex;align-items:center;gap:10px;padding:11px 6px;border-bottom:1px solid var(--line);}
+  .word-row .k{font-family:var(--font-display);font-size:17px;min-width:88px;}
+  .word-row .r{font-size:12px;color:var(--ink-soft);min-width:82px;}
+  .word-row .m{font-size:13px;flex:1;color:var(--ink);}
+  .badge{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .b-new{background:var(--ink-soft);opacity:0.4;} .b-learning{background:var(--indigo-soft);}
+  .b-review{background:var(--indigo);} .b-mastered{background:var(--gold);}
+  .mini-hanko{color:var(--seal);font-size:10px;border:1.5px solid var(--seal);border-radius:50%;width:18px;height:18px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;transform:rotate(-8deg);}
+  .spk-mini{background:none;border:none;cursor:pointer;font-size:14px;color:var(--indigo);opacity:0.7;flex-shrink:0;}
+  .spk-mini:hover{opacity:1;}
+  .topic-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px;}
+  .topic-tile{background:var(--paper-deep);border:1px solid var(--line);border-radius:10px;padding:14px;
+    cursor:pointer;text-align:left;transition:all .12s ease;}
+  .topic-tile:hover{border-color:var(--indigo);transform:translateY(-1px);}
+  .topic-tile .tjp{font-family:var(--font-display);font-size:15px;color:var(--ink);}
+  .topic-tile .ten{font-size:10.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;}
+  .topic-tile .tct{font-family:var(--font-mono);font-size:11px;color:var(--seal);margin-top:6px;}
+  textarea.add-input{width:100%;min-height:120px;border-radius:9px;border:1.5px solid var(--line);
+    background:var(--paper-deep);color:var(--ink);font-family:var(--font-mono);font-size:13px;padding:12px;
+    resize:vertical;margin-bottom:10px;}
+  textarea.add-input:focus{outline:none;border-color:var(--indigo);}
+  select.topic-picker{width:100%;padding:12px;border-radius:9px;border:1.5px solid var(--line);
+    background:var(--paper-deep);color:var(--ink);font-family:var(--font-body);font-size:13px;margin-bottom:10px;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);
+    padding:11px 20px;border-radius:100px;font-size:13px;box-shadow:0 6px 18px rgba(0,0,0,0.25);z-index:50;}
+  .empty-state{text-align:center;padding:40px 20px;color:var(--ink-soft);}
+  .empty-state .kanji-big{opacity:0.15;margin-bottom:10px;}
+  @media (max-width:520px){.stats-row{grid-template-columns:repeat(2,1fr);} .quiz-options{grid-template-columns:1fr;}
+    .topic-grid{grid-template-columns:1fr;} nav.tabs{overflow-x:auto;}}
+</style>
+</head>
+<body>
+<div id="app"><div class="wrap" id="root">Loading…</div></div>
+
+<script>
+/* =====================  TOPICS  ===================== */
+const TOPICS = {
+  work:{jp:'仕事・経済',en:'Work & Economy'},
+  society:{jp:'社会・時事',en:'Society & Current Affairs'},
+  academic:{jp:'学問・思考',en:'Academic & Thinking'},
+  psych:{jp:'心理・人間関係',en:'Psychology & Relationships'},
+  change:{jp:'変化・行動',en:'Change & Action'},
+  qualities:{jp:'性質・様子',en:'Qualities & Descriptions'},
+  expr:{jp:'表現・つなぎ言葉',en:'Expressions & Connectors'},
+  daily:{jp:'日常生活',en:'Daily Life'},
+  health:{jp:'健康・医療',en:'Health & Medicine'},
+  nature:{jp:'自然・天気',en:'Nature & Weather'},
+  travel:{jp:'旅行・交通',en:'Travel & Transport'}
+};
+
+/* =====================  WORD DATA  ===================== */
+// [kanji, kana, meaning, pos, topic, example_jp, example_en]
+const BASE_WORDS = [
+["状況","じょうきょう","situation; circumstances","n","society","会社の経営状況は厳しい。","The company's business situation is tough."],
+["影響","えいきょう","influence; effect","n","academic","睡眠不足は健康に影響を与える。","Lack of sleep affects health."],
+["原因","げんいん","cause","n","academic","事故の原因を調べる。","Investigate the cause of the accident."],
+["結果","けっか","result","n","academic","努力の結果、試験に合格した。","As a result of the effort, I passed the exam."],
+["方法","ほうほう","method; way","n","academic","新しい勉強方法を試す。","Try a new study method."],
+["理由","りゆう","reason","n","academic","遅刻した理由を説明する。","Explain the reason for being late."],
+["内容","ないよう","content; substance","n","academic","会議の内容をまとめる。","Summarize the content of the meeting."],
+["態度","たいど","attitude","n","psych","彼の態度が急に変わった。","His attitude suddenly changed."],
+["環境","かんきょう","environment","n","society","働きやすい環境を作る。","Create an environment that's easy to work in."],
+["条件","じょうけん","condition","n","academic","契約の条件を確認する。","Check the terms of the contract."],
+["制度","せいど","system; institution","n","society","新しい年金制度が始まる。","A new pension system begins."],
+["政策","せいさく","policy","n","society","政府が新しい政策を発表した。","The government announced a new policy."],
+["経済","けいざい","economy","n","work","日本経済は回復しつつある。","Japan's economy is recovering."],
+["社会","しゃかい","society","n","society","高齢化社会が進んでいる。","The aging society is advancing."],
+["文化","ぶんか","culture","n","society","日本の伝統文化に興味がある。","Interested in traditional Japanese culture."],
+["技術","ぎじゅつ","technology; skill","n","work","最新の技術を導入する。","Introduce the latest technology."],
+["産業","さんぎょう","industry","n","work","観光産業が発展している。","The tourism industry is developing."],
+["企業","きぎょう","company; enterprise","n","work","大企業に就職したい。","Want to get a job at a large company."],
+["組織","そしき","organization","n","work","会社の組織を見直す。","Review the company's organization."],
+["機会","きかい","opportunity","n","academic","留学する機会を逃した。","Missed the chance to study abroad."],
+["可能性","かのうせい","possibility","n","academic","計画が成功する可能性は低い。","The likelihood of the plan succeeding is low."],
+["必要性","ひつようせい","necessity","n","academic","改革の必要性を訴える。","Appeal for the necessity of reform."],
+["重要性","じゅうようせい","importance","n","academic","早期発見の重要性を強調する。","Emphasize the importance of early detection."],
+["特徴","とくちょう","characteristic; feature","n","academic","この製品の特徴を説明する。","Explain the features of this product."],
+["傾向","けいこう","tendency; trend","n","academic","若者の消費傾向が変わってきた。","Young people's spending tendencies have changed."],
+["現象","げんしょう","phenomenon","n","academic","異常気象は世界的な現象だ。","Abnormal weather is a global phenomenon."],
+["問題点","もんだいてん","problem point","n","academic","計画の問題点を指摘する。","Point out the problems in the plan."],
+["課題","かだい","task; issue to solve","n","academic","解決すべき課題が多い。","There are many issues to solve."],
+["対策","たいさく","countermeasure","n","society","地震への対策を立てる。","Formulate countermeasures against earthquakes."],
+["解決","かいけつ","solution; resolution","n","academic","問題の解決に時間がかかった。","Solving the problem took time."],
+["改善","かいぜん","improvement","n","work","サービスの改善に努める。","Strive to improve service."],
+["向上","こうじょう","improvement; rise","n","work","生産性の向上を目指す。","Aim to improve productivity."],
+["発展","はってん","development","n","society","町は急速に発展した。","The town developed rapidly."],
+["成長","せいちょう","growth","n","work","会社は着実に成長している。","The company is steadily growing."],
+["拡大","かくだい","expansion","n","work","事業を海外に拡大する。","Expand the business overseas."],
+["縮小","しゅくしょう","reduction; shrinking","n","work","予算を縮小せざるを得ない。","Have no choice but to cut the budget."],
+["増加","ぞうか","increase","n","society","外国人観光客が増加している。","Foreign tourists are increasing."],
+["減少","げんしょう","decrease","n","society","人口が年々減少している。","The population is decreasing year by year."],
+["維持","いじ","maintenance","n","health","健康を維持するために運動する。","Exercise to maintain health."],
+["継続","けいぞく","continuation","n","work","この取り組みを継続する必要がある。","This initiative needs to continue."],
+["実施","じっし","implementation","n","society","アンケート調査を実施する。","Conduct a questionnaire survey."],
+["実現","じつげん","realization","n","academic","夢を実現するために努力する。","Work hard to make the dream come true."],
+["達成","たっせい","achievement","n","work","目標を達成した。","Achieved the goal."],
+["効果","こうか","effect","n","health","この薬は効果がある。","This medicine is effective."],
+["影響力","えいきょうりょく","influence (power)","n","society","SNSの影響力は大きい。","The influence of social media is huge."],
+["評価","ひょうか","evaluation","n","work","上司から高く評価された。","Was highly evaluated by the boss."],
+["判断","はんだん","judgment","n","academic","冷静に判断することが大切だ。","It's important to judge calmly."],
+["判断力","はんだんりょく","judgment ability","n","academic","判断力を養う必要がある。","Need to cultivate judgment."],
+["決定","けってい","decision","n","work","会議で方針を決定した。","Decided the policy at the meeting."],
+["決断","けつだん","decision; resolve","n","psych","重大な決断を下した。","Made a major decision."],
+["選択","せんたく","choice; selection","n","academic","正しい選択をする。","Make the right choice."],
+["比較","ひかく","comparison","n","academic","二つの商品を比較する。","Compare the two products."],
+["分析","ぶんせき","analysis","n","academic","データを詳しく分析する。","Analyze the data in detail."],
+["調査","ちょうさ","investigation; survey","n","academic","市場を調査する。","Investigate the market."],
+["研究","けんきゅう","research","n","academic","がんの治療法を研究する。","Research treatments for cancer."],
+["実験","じっけん","experiment","n","academic","新しい薬の実験を行う。","Conduct experiments on a new drug."],
+["観察","かんさつ","observation","n","academic","植物の成長を観察する。","Observe the growth of the plant."],
+["証拠","しょうこ","evidence","n","society","犯人の証拠が見つかった。","Evidence of the culprit was found."],
+["根拠","こんきょ","basis; grounds","n","academic","その主張には根拠がない。","That claim has no basis."],
+["資料","しりょう","materials; data","n","work","会議の資料を準備する。","Prepare materials for the meeting."],
+["情報","じょうほう","information","n","academic","正確な情報を集める。","Gather accurate information."],
+["知識","ちしき","knowledge","n","academic","専門知識を身につける。","Acquire specialized knowledge."],
+["経験","けいけん","experience","n","work","海外で働いた経験がある。","Have experience working abroad."],
+["能力","のうりょく","ability","n","work","彼は優れた能力を持っている。","He has excellent ability."],
+["才能","さいのう","talent","n","psych","音楽の才能に恵まれている。","Blessed with musical talent."],
+["性格","せいかく","personality","n","psych","明るい性格の人が好きだ。","I like people with a cheerful personality."],
+["人格","じんかく","character (moral)","n","psych","人格を尊重することが大事だ。","It's important to respect someone's character."],
+["印象","いんしょう","impression","n","psych","第一印象がとても良かった。","The first impression was very good."],
+["感覚","かんかく","sense; feeling","n","psych","彼は独特な感覚を持っている。","He has a unique sense."],
+["感情","かんじょう","emotion","n","psych","感情を抑えられなかった。","Couldn't hold back my emotions."],
+["心理","しんり","psychology","n","psych","消費者の心理を理解する。","Understand consumer psychology."],
+["精神","せいしん","spirit; mind","n","psych","精神的に疲れている。","Mentally exhausted."],
+["意識","いしき","consciousness; awareness","n","psych","環境問題への意識が高まっている。","Awareness of environmental issues is rising."],
+["意志","いし","will; intention","n","psych","強い意志を持って続ける。","Continue with strong will."],
+["意欲","いよく","motivation; drive","n","psych","仕事への意欲が湧いてきた。","Motivation for work has emerged."],
+["興味","きょうみ","interest","n","psych","歴史に興味がある。","Interested in history."],
+["関心","かんしん","concern; interest","n","psych","環境問題への関心が高い。","High concern for environmental issues."],
+["不安","ふあん","anxiety","n","psych","将来に不安を感じる。","Feel anxious about the future."],
+["緊張","きんちょう","tension; nervousness","n","psych","面接で緊張してしまった。","Got nervous at the interview."],
+["悩み","なやみ","worry; trouble","n","psych","誰にも悩みを相談できない。","Can't consult anyone about my worries."],
+["苦労","くろう","hardship; trouble","n","psych","子育てには苦労が多い。","Raising children involves a lot of hardship."],
+["努力","どりょく","effort","n","psych","努力すれば夢は叶う。","If you make an effort, dreams come true."],
+["工夫","くふう","ingenuity; device","n","academic","覚えやすいように工夫する。","Devise ways to make it easier to remember."],
+["手段","しゅだん","means; method","n","academic","目的のためには手段を選ばない。","Won't choose the means, for the sake of the goal."],
+["手続き","てつづき","procedure","n","daily","入学の手続きを済ませた。","Completed the enrollment procedures."],
+["規則","きそく","rule","n","society","校則を守らなければならない。","Must follow school rules."],
+["規制","きせい","regulation","n","society","喫煙が規制されている。","Smoking is regulated."],
+["法律","ほうりつ","law","n","society","法律を守ることは国民の義務だ。","Obeying the law is a citizen's duty."],
+["権利","けんり","right (entitlement)","n","society","投票する権利がある。","Have the right to vote."],
+["義務","ぎむ","duty; obligation","n","society","税金を納めるのは国民の義務だ。","Paying taxes is a citizen's duty."],
+["責任","せきにん","responsibility","n","work","自分の失敗には責任を持つ。","Take responsibility for my own mistakes."],
+["役割","やくわり","role","n","work","チームでの役割を果たす。","Fulfill my role on the team."],
+["立場","たちば","position; standpoint","n","society","相手の立場に立って考える。","Think from the other person's standpoint."],
+["状態","じょうたい","state; condition","n","health","患者の状態は安定している。","The patient's condition is stable."],
+["背景","はいけい","background","n","academic","事件の背景を調べる。","Investigate the background of the incident."],
+["基準","きじゅん","standard; criteria","n","society","合格の基準を満たす。","Meet the standard for passing."],
+["基礎","きそ","basis; foundation","n","academic","基礎から日本語を学ぶ。","Learn Japanese from the basics."],
+["基本","きほん","basics","n","academic","基本を大切にする。","Value the basics."],
+["標準","ひょうじゅん","standard","n","work","業界の標準に合わせる。","Align with the industry standard."],
+["平均","へいきん","average","n","academic","平均点より高かった。","It was higher than the average score."],
+["割合","わりあい","proportion; rate","n","academic","女性の割合が増えている。","The proportion of women is increasing."],
+["比率","ひりつ","ratio","n","academic","男女の比率がほぼ同じだ。","The male-female ratio is almost equal."],
+["統計","とうけい","statistics","n","academic","統計によると人口は減っている。","According to statistics, the population is decreasing."],
+["数値","すうち","numerical value","n","academic","具体的な数値を示す。","Show specific figures."],
+["就職","しゅうしょく","finding employment","n","work","来年、就職する予定だ。","Plan to find employment next year."],
+["退職","たいしょく","retirement; resignation","n","work","父は来月退職する。","My father retires next month."],
+["転職","てんしょく","changing jobs","n","work","転職を考えている。","Thinking of changing jobs."],
+["採用","さいよう","hiring; adoption","n","work","その会社に採用された。","Was hired by that company."],
+["雇用","こよう","employment","n","work","雇用の安定が求められる。","Stable employment is needed."],
+["給料","きゅうりょう","salary","n","work","給料が上がった。","My salary went up."],
+["昇進","しょうしん","promotion","n","work","彼は課長に昇進した。","He was promoted to section chief."],
+["契約","けいやく","contract","n","work","新しい契約を結んだ。","Signed a new contract."],
+["交渉","こうしょう","negotiation","n","work","価格について交渉する。","Negotiate about the price."],
+["取引","とりひき","transaction; deal","n","work","海外企業と取引している。","Doing business with an overseas company."],
+["顧客","こきゃく","customer; client","n","work","顧客のニーズに応える。","Respond to customer needs."],
+["消費者","しょうひしゃ","consumer","n","work","消費者の意見を聞く。","Listen to consumers' opinions."],
+["商品","しょうひん","merchandise","n","work","新商品を開発する。","Develop a new product."],
+["製品","せいひん","product","n","work","製品の品質を確かめる。","Check the quality of the product."],
+["価格","かかく","price","n","work","価格が急に上がった。","The price suddenly rose."],
+["需要","じゅよう","demand","n","work","この商品の需要が高い。","Demand for this product is high."],
+["供給","きょうきゅう","supply","n","work","電力の供給が不足している。","The electricity supply is insufficient."],
+["市場","しじょう","market","n","work","新しい市場を開拓する。","Develop a new market."],
+["競争","きょうそう","competition","n","work","会社間の競争が激しい。","Competition between companies is fierce."],
+["利益","りえき","profit; benefit","n","work","会社は大きな利益を上げた。","The company made a big profit."],
+["損失","そんしつ","loss","n","work","取引で損失を出した。","Incurred a loss in the deal."],
+["倒産","とうさん","bankruptcy","n","work","その会社は倒産した。","That company went bankrupt."],
+["投資","とうし","investment","n","work","株に投資する。","Invest in stocks."],
+["貯金","ちょきん","savings","n","daily","毎月貯金している。","Saving money every month."],
+["借金","しゃっきん","debt","n","daily","借金を返す。","Pay back a debt."],
+["税金","ぜいきん","tax","n","daily","税金を納める。","Pay taxes."],
+["予算","よさん","budget","n","work","予算内で計画を立てる。","Plan within the budget."],
+["支出","ししゅつ","expenditure","n","daily","毎月の支出を記録する。","Record monthly expenditures."],
+["収入","しゅうにゅう","income","n","work","収入が増えた。","Income increased."],
+["経営","けいえい","management (business)","n","work","父は小さな店を経営している。","My father manages a small shop."],
+["理論","りろん","theory","n","academic","理論と実践は違う。","Theory and practice are different."],
+["概念","がいねん","concept","n","academic","新しい概念を導入する。","Introduce a new concept."],
+["定義","ていぎ","definition","n","academic","「幸せ」の定義は人それぞれだ。","The definition of 'happiness' differs for each person."],
+["原則","げんそく","principle","n","academic","この原則には例外がある。","There are exceptions to this principle."],
+["前提","ぜんてい","premise; assumption","n","academic","その計画は間違った前提に基づく。","That plan is based on a wrong premise."],
+["仮説","かせつ","hypothesis","n","academic","仮説を立てて検証する。","Formulate and verify a hypothesis."],
+["結論","けつろん","conclusion","n","academic","話し合いの結論が出た。","A conclusion was reached in the discussion."],
+["証明","しょうめい","proof; demonstration","n","academic","自分の無罪を証明する。","Prove one's innocence."],
+["論理","ろんり","logic","n","academic","彼の論理には矛盾がある。","There is a contradiction in his logic."],
+["矛盾","むじゅん","contradiction","n","academic","発言に矛盾を感じる。","Feel a contradiction in the statement."],
+["一致","いっち","agreement; match","n","academic","二人の意見が一致した。","The two people's opinions agreed."],
+["相違","そうい","difference","n","academic","両者の意見に相違がある。","There is a difference in the two opinions."],
+["類似","るいじ","similarity","n","academic","この二つの事件には類似点がある。","These two incidents have similarities."],
+["共通点","きょうつうてん","common point","n","psych","二人には共通点が多い。","The two have many things in common."],
+["相違点","そういてん","point of difference","n","academic","両案の相違点を比較する。","Compare the differences between the two proposals."],
+["要素","ようそ","element; factor","n","academic","成功の要素は何か。","What are the elements of success?"],
+["要因","よういん","cause; factor","n","academic","失敗の要因を分析する。","Analyze the factors of the failure."],
+["要点","ようてん","key point","n","academic","レポートの要点をまとめる。","Summarize the main points of the report."],
+["本質","ほんしつ","essence","n","academic","問題の本質を見極める。","Discern the essence of the problem."],
+["本来","ほんらい","originally; essentially","n","academic","本来の目的を忘れない。","Don't forget the original purpose."],
+["生じる","しょうじる","to arise; occur","v","academic","新たな問題が生じた。","A new problem arose."],
+["含む","ふくむ","to include","v","academic","税込みの価格には消費税が含まれる。","The tax-included price includes consumption tax."],
+["含める","ふくめる","to include (something)","v","academic","交通費を含めて計算する。","Calculate including transportation costs."],
+["伴う","ともなう","to accompany; entail","v","change","変化には痛みが伴う。","Change is accompanied by pain."],
+["及ぼす","およぼす","to exert (influence)","v","academic","睡眠不足は健康に悪影響を及ぼす。","Lack of sleep has a bad effect on health."],
+["及ぶ","およぶ","to reach; amount to","v","academic","被害は広範囲に及んだ。","The damage extended over a wide area."],
+["関わる","かかわる","to be related to","v","psych","その事件に関わっていた。","Was involved in that incident."],
+["関する","かんする","to be related to; concern","v","academic","環境問題に関する記事を読んだ。","Read an article related to environmental issues."],
+["異なる","ことなる","to differ","v","academic","文化によって考え方が異なる。","Ways of thinking differ by culture."],
+["一致する","いっちする","to match; agree","v","academic","証言が一致しなかった。","The testimonies didn't match."],
+["対応する","たいおうする","to correspond; deal with","v","work","クレームに丁寧に対応する。","Respond politely to complaints."],
+["対する","たいする","to be against; regarding","v","academic","この意見に対して反論する。","Rebut this opinion."],
+["比べる","くらべる","to compare","v","academic","去年と比べて売り上げが増えた。","Sales increased compared to last year."],
+["比較する","ひかくする","to compare","v","academic","二つのデータを比較する。","Compare the two sets of data."],
+["検討する","けんとうする","to examine; consider","v","work","提案を検討する。","Consider the proposal."],
+["考慮する","こうりょする","to take into consideration","v","work","予算を考慮して計画する。","Plan considering the budget."],
+["配慮する","はいりょする","to be considerate of","v","psych","相手の気持ちに配慮する。","Be considerate of the other person's feelings."],
+["工夫する","くふうする","to devise; contrive","v","academic","楽しく学べるように工夫する。","Devise ways to learn enjoyably."],
+["試みる","こころみる","to attempt","v","change","新しい方法を試みる。","Attempt a new method."],
+["挑戦する","ちょうせんする","to challenge","v","change","難しい試験に挑戦する。","Challenge a difficult exam."],
+["克服する","こくふくする","to overcome","v","change","苦手を克服する。","Overcome a weakness."],
+["解決する","かいけつする","to resolve","v","academic","問題を早く解決する。","Solve the problem quickly."],
+["解消する","かいしょうする","to eliminate; cancel","v","psych","ストレスを解消する。","Relieve stress."],
+["改善する","かいぜんする","to improve","v","work","サービスを改善する。","Improve the service."],
+["改良する","かいりょうする","to improve; make better","v","work","製品を改良する。","Improve the product."],
+["向上する","こうじょうする","to improve; rise","v","work","技術が向上する。","Skills improve."],
+["発展する","はってんする","to develop","v","society","町が発展する。","The town develops."],
+["発達する","はったつする","to develop; grow","v","change","子供の脳が発達する。","A child's brain develops."],
+["成長する","せいちょうする","to grow","v","change","会社が成長する。","The company grows."],
+["成立する","せいりつする","to be established","v","society","契約が成立する。","The contract is concluded."],
+["成立させる","せいりつさせる","to establish","v","society","法案を成立させる。","Get the bill passed."],
+["達成する","たっせいする","to achieve","v","work","目標を達成する。","Achieve the goal."],
+["実現する","じつげんする","to realize; come true","v","academic","計画を実現する。","Realize the plan."],
+["実施する","じっしする","to carry out","v","society","調査を実施する。","Carry out a survey."],
+["実行する","じっこうする","to execute","v","work","計画を実行する。","Execute the plan."],
+["行う","おこなう","to conduct; carry out","v","work","会議を行う。","Hold a meeting."],
+["進める","すすめる","to advance; proceed with","v","work","プロジェクトを進める。","Move the project forward."],
+["進行する","しんこうする","to progress","v","change","工事が順調に進行する。","Construction proceeds smoothly."],
+["促進する","そくしんする","to promote","v","society","経済成長を促進する。","Promote economic growth."],
+["妨げる","さまたげる","to hinder","v","change","騒音が睡眠を妨げる。","Noise interferes with sleep."],
+["防ぐ","ふせぐ","to prevent","v","health","風邪を防ぐ。","Prevent a cold."],
+["避ける","さける","to avoid","v","daily","混雑を避ける。","Avoid crowds."],
+["逃れる","のがれる","to escape; flee","v","change","危険から逃れる。","Escape from danger."],
+["補う","おぎなう","to make up for; supplement","v","academic","不足を補う。","Make up for a shortage."],
+["補充する","ほじゅうする","to replenish","v","work","在庫を補充する。","Replenish stock."],
+["補足する","ほそくする","to supplement (info)","v","academic","説明を補足する。","Supplement the explanation."],
+["加える","くわえる","to add","v","daily","塩を少し加える。","Add a little salt."],
+["加わる","くわわる","to join; be added","v","change","新しいメンバーが加わる。","A new member joins."],
+["含まれる","ふくまれる","to be included","v","academic","この値段には送料が含まれる。","Shipping is included in this price."],
+["広がる","ひろがる","to spread; expand","v","change","噂が広がる。","Rumors spread."],
+["広める","ひろめる","to spread (something)","v","change","知識を広める。","Spread knowledge."],
+["縮む","ちぢむ","to shrink","v","change","洗濯したらセーターが縮んだ。","The sweater shrank after washing."],
+["縮める","ちぢめる","to shorten","v","change","距離を縮める。","Shorten the distance."],
+["拡大する","かくだいする","to expand","v","work","事業を拡大する。","Expand the business."],
+["縮小する","しゅくしょうする","to shrink; reduce","v","work","規模を縮小する。","Reduce the scale."],
+["増える","ふえる","to increase","v","society","利用者が増える。","Users increase."],
+["増やす","ふやす","to increase (something)","v","work","収入を増やす。","Increase income."],
+["減る","へる","to decrease","v","society","人口が減る。","Population decreases."],
+["減らす","へらす","to decrease (something)","v","health","体重を減らす。","Reduce weight."],
+["維持する","いじする","to maintain","v","health","健康を維持する。","Maintain health."],
+["保つ","たもつ","to maintain; keep","v","health","バランスを保つ。","Maintain balance."],
+["保存する","ほぞんする","to preserve; save","v","daily","食品を冷蔵庫で保存する。","Preserve food in the fridge."],
+["保護する","ほごする","to protect","v","nature","自然を保護する。","Protect nature."],
+["守る","まもる","to protect; keep","v","society","約束を守る。","Keep a promise."],
+["支える","ささえる","to support","v","psych","家族が私を支えてくれた。","My family supported me."],
+["支持する","しじする","to support (an opinion)","v","society","その政策を支持する。","Support that policy."],
+["反対する","はんたいする","to oppose","v","society","計画に反対する。","Oppose the plan."],
+["賛成する","さんせいする","to agree","v","society","提案に賛成する。","Agree with the proposal."],
+["主張する","しゅちょうする","to insist; claim","v","society","自分の意見を主張する。","Assert one's opinion."],
+["提案する","ていあんする","to propose","v","work","新しいアイデアを提案する。","Propose a new idea."],
+["提出する","ていしゅつする","to submit","v","work","レポートを提出する。","Submit the report."],
+["提供する","ていきょうする","to provide","v","work","情報を提供する。","Provide information."],
+["供給する","きょうきゅうする","to supply","v","work","電力を供給する。","Supply electricity."],
+["求める","もとめる","to request; seek","v","work","改善を求める。","Demand improvement."],
+["要求する","ようきゅうする","to demand","v","work","給料の値上げを要求する。","Demand a pay raise."],
+["要請する","ようせいする","to request formally","v","society","支援を要請する。","Request support."],
+["依頼する","いらいする","to request","v","work","翻訳を依頼する。","Request a translation."],
+["頼る","たよる","to rely on","v","psych","友人に頼る。","Rely on a friend."],
+["頼む","たのむ","to ask; request","v","daily","友達に手伝いを頼む。","Ask a friend to help."],
+["任せる","まかせる","to entrust","v","work","仕事を部下に任せる。","Leave the work to a subordinate."],
+["委ねる","ゆだねる","to entrust; leave to","v","work","判断を専門家に委ねる。","Leave the decision to an expert."],
+["負担する","ふたんする","to bear (a burden)","v","work","費用を会社が負担する。","The company bears the cost."],
+["担う","になう","to bear; shoulder","v","work","重要な役割を担う。","Bear an important role."],
+["果たす","はたす","to fulfill","v","work","責任を果たす。","Fulfill one's responsibility."],
+["務める","つとめる","to serve as; hold office","v","work","司会を務める。","Serve as the moderator."],
+["勤める","つとめる","to work for (a company)","v","work","銀行に勤めている。","Work at a bank."],
+["努める","つとめる","to endeavor","v","work","改善に努める。","Strive for improvement."],
+["心がける","こころがける","to keep in mind; be mindful","v","daily","早寝早起きを心がける。","Make a point of sleeping and waking early."],
+["意識する","いしきする","to be conscious of","v","health","健康を意識する。","Be conscious of health."],
+["気づく","きづく","to notice","v","daily","間違いに気づいた。","Noticed the mistake."],
+["気づかう","きづかう","to be considerate of","v","psych","相手の体調を気づかう。","Be concerned about the other person's health."],
+["感じる","かんじる","to feel","v","psych","不安を感じる。","Feel anxious."],
+["思われる","おもわれる","to be thought (of as)","v","academic","問題があると思われる。","It seems there is a problem."],
+["見なす","みなす","to regard as","v","academic","無断欠席は失格と見なす。","Unauthorized absence is regarded as disqualification."],
+["見なされる","みなされる","to be regarded as","v","academic","常識だと見なされている。","It's regarded as common sense."],
+["判断する","はんだんする","to judge","v","academic","状況を見て判断する。","Judge based on the situation."],
+["判明する","はんめいする","to become clear; known","v","academic","原因が判明した。","The cause became clear."],
+["明らかになる","あきらかになる","to become clear","v","academic","真相が明らかになった。","The truth became clear."],
+["明らかにする","あきらかにする","to make clear","v","academic","事実を明らかにする。","Clarify the facts."],
+["示す","しめす","to show; indicate","v","academic","データが結果を示す。","The data shows the result."],
+["表す","あらわす","to express; represent","v","academic","グラフで変化を表す。","Express the change with a graph."],
+["表れる","あらわれる","to show (in an expression)","v","psych","疲れが顔に表れる。","Fatigue shows on the face."],
+["現れる","あらわれる","to appear","v","daily","急に雨雲が現れた。","Rain clouds suddenly appeared."],
+["現す","あらわす","to reveal","v","psych","本性を現す。","Reveal one's true nature."],
+["反映する","はんえいする","to reflect","v","society","民意を政治に反映する。","Reflect public opinion in politics."],
+["反映させる","はんえいさせる","to make reflect","v","society","意見を計画に反映させる。","Reflect the opinion in the plan."],
+["著しい","いちじるしい","remarkable; marked","adj","qualities","経済が著しく成長した。","The economy grew remarkably."],
+["激しい","はげしい","intense; violent","adj","qualities","激しい雨が降っている。","It's raining heavily."],
+["厳しい","きびしい","strict; severe","adj","qualities","上司は厳しい人だ。","My boss is a strict person."],
+["鋭い","するどい","sharp; keen","adj","qualities","彼は鋭い指摘をした。","He made a sharp point."],
+["豊かな","ゆたかな","abundant; rich","adj","qualities","自然が豊かな町だ。","It's a town rich in nature."],
+["乏しい","とぼしい","scarce; lacking","adj","qualities","経験が乏しい。","Lacking in experience."],
+["貧しい","まずしい","poor","adj","qualities","貧しい生活を送っていた。","Was living a poor life."],
+["複雑な","ふくざつな","complicated","adj","qualities","手続きが複雑だ。","The procedure is complicated."],
+["単純な","たんじゅんな","simple","adj","qualities","単純なミスをした。","Made a simple mistake."],
+["明確な","めいかくな","clear; definite","adj","qualities","明確な理由がある。","There is a clear reason."],
+["曖昧な","あいまいな","ambiguous","adj","qualities","曖昧な返事をした。","Gave an ambiguous answer."],
+["正確な","せいかくな","accurate","adj","qualities","正確な情報が必要だ。","Accurate information is needed."],
+["不正確な","ふせいかくな","inaccurate","adj","qualities","不正確な情報を流す。","Spread inaccurate information."],
+["適切な","てきせつな","appropriate","adj","qualities","適切な対応をする。","Take appropriate action."],
+["不適切な","ふてきせつな","inappropriate","adj","qualities","不適切な発言だった。","It was an inappropriate remark."],
+["妥当な","だとうな","valid; reasonable","adj","qualities","妥当な判断だと思う。","I think it's a reasonable judgment."],
+["不十分な","ふじゅうぶんな","insufficient","adj","qualities","説明が不十分だ。","The explanation is insufficient."],
+["十分な","じゅうぶんな","sufficient","adj","qualities","十分な準備をする。","Make sufficient preparation."],
+["必要な","ひつような","necessary","adj","qualities","必要な書類を集める。","Gather the necessary documents."],
+["不可欠な","ふかけつな","essential; indispensable","adj","qualities","水は生活に不可欠だ。","Water is essential to life."],
+["重大な","じゅうだいな","serious; grave","adj","society","重大な事故が起きた。","A serious accident occurred."],
+["深刻な","しんこくな","serious (situation)","adj","society","深刻な問題に直面している。","Facing a serious problem."],
+["重要な","じゅうような","important","adj","qualities","重要な会議に出席する。","Attend an important meeting."],
+["主要な","しゅような","main; principal","adj","qualities","主要な原因を探る。","Search for the main cause."],
+["基本的な","きほんてきな","basic; fundamental","adj","qualities","基本的なルールを守る。","Follow the basic rules."],
+["具体的な","ぐたいてきな","concrete; specific","adj","qualities","具体的な例を挙げる。","Give a concrete example."],
+["抽象的な","ちゅうしょうてきな","abstract","adj","qualities","説明が抽象的すぎる。","The explanation is too abstract."],
+["積極的な","せっきょくてきな","proactive; positive","adj","psych","積極的に参加する。","Participate proactively."],
+["消極的な","しょうきょくてきな","passive; negative","adj","psych","消極的な態度をとる。","Take a passive attitude."],
+["客観的な","きゃっかんてきな","objective","adj","academic","客観的に判断する。","Judge objectively."],
+["主観的な","しゅかんてきな","subjective","adj","academic","それは主観的な意見だ。","That's a subjective opinion."],
+["効果的な","こうかてきな","effective","adj","academic","効果的な勉強法を探す。","Search for an effective study method."],
+["一般的な","いっぱんてきな","general; common","adj","academic","一般的な考え方だ。","It's a common way of thinking."],
+["特別な","とくべつな","special","adj","qualities","特別な意味を持つ。","Have a special meaning."],
+["特殊な","とくしゅな","special; particular","adj","qualities","特殊な技術が必要だ。","Special skills are needed."],
+["独特な","どくとくな","unique; peculiar","adj","qualities","独特な雰囲気の店だ。","It's a shop with a unique atmosphere."],
+["新たな","あらたな","new","adj","change","新たな挑戦を始める。","Begin a new challenge."],
+["急激な","きゅうげきな","rapid; sudden","adj","change","急激な変化に驚いた。","Surprised by the sudden change."],
+["急速な","きゅうそくな","rapid","adj","change","急速な発展を遂げた。","Achieved rapid development."],
+["安定した","あんていした","stable","adj","work","安定した収入を得る。","Obtain a stable income."],
+["不安定な","ふあんていな","unstable","adj","psych","不安定な気持ちになる。","Feel unstable emotionally."],
+["柔軟な","じゅうなんな","flexible","adj","work","柔軟な対応を心がける。","Try to respond flexibly."],
+["頑固な","がんこな","stubborn","adj","psych","祖父は頑固な性格だ。","My grandfather has a stubborn personality."],
+["慎重な","しんちょうな","cautious","adj","psych","慎重な判断が求められる。","Careful judgment is required."],
+["率直な","そっちょくな","candid; frank","adj","psych","率直な意見を聞かせてほしい。","Please tell me your candid opinion."],
+["真剣な","しんけんな","serious; earnest","adj","psych","真剣な顔で話す。","Speak with a serious expression."],
+["熱心な","ねっしんな","enthusiastic","adj","psych","熱心に勉強する。","Study enthusiastically."],
+["面倒な","めんどうな","troublesome","adj","daily","手続きが面倒だ。","The procedure is a hassle."],
+["厄介な","やっかいな","troublesome; annoying","adj","daily","厄介な問題を抱えている。","Have a troublesome problem."],
+["むしろ","むしろ","rather; on the contrary","adv","expr","休むより、むしろ働きたい。","Rather than resting, I'd rather work."],
+["かえって","かえって","on the contrary; rather","adv","expr","手伝ったら、かえって迷惑だった。","Helping actually caused more trouble."],
+["案外","あんがい","unexpectedly","adv","expr","テストは案外簡単だった。","The test was unexpectedly easy."],
+["意外に","いがいに","unexpectedly","adv","expr","彼は意外に優しかった。","He was unexpectedly kind."],
+["実際に","じっさいに","actually; in fact","adv","expr","実際に行ってみたら違った。","When I actually went, it was different."],
+["確かに","たしかに","certainly; indeed","adv","expr","確かに彼の言う通りだ。","Certainly, he's right."],
+["明らかに","あきらかに","clearly; evidently","adv","expr","明らかに間違っている。","It's clearly wrong."],
+["次第に","しだいに","gradually","adv","expr","次第に慣れてきた。","Gradually got used to it."],
+["徐々に","じょじょに","gradually","adv","expr","徐々に回復している。","Gradually recovering."],
+["急に","きゅうに","suddenly","adv","expr","急に雨が降り出した。","It suddenly started raining."],
+["突然","とつぜん","suddenly","adv","expr","突然、電話が鳴った。","The phone suddenly rang."],
+["一方で","いっぽうで","on the other hand","adv","expr","一方で、問題も残っている。","On the other hand, problems remain."],
+["それにもかかわらず","それにもかかわらず","nevertheless","adv","expr","疲れていた。それにもかかわらず働いた。","Was tired. Nevertheless, worked."],
+["にもかかわらず","にもかかわらず","despite; in spite of","adv","expr","雨にもかかわらず出かけた。","Went out despite the rain."],
+["したがって","したがって","accordingly; therefore","adv","expr","予算が減った。したがって計画を見直す。","The budget decreased. Therefore, we'll review the plan."],
+["そのため","そのため","for that reason","adv","expr","電車が遅れた。そのため遅刻した。","The train was late. Because of that, I was late."],
+["それゆえ","それゆえ","therefore","adv","expr","経験がない。それゆえ慎重になる。","No experience. Therefore, become cautious."],
+["もちろん","もちろん","of course","adv","expr","もちろん手伝います。","Of course I'll help."],
+["とりわけ","とりわけ","especially; particularly","adv","expr","今年はとりわけ暑い。","This year is especially hot."],
+["特に","とくに","especially","adv","expr","特に問題はない。","There's no particular problem."],
+["少なくとも","すくなくとも","at least","adv","expr","少なくとも三回は確認する。","Check at least three times."],
+["いずれにしても","いずれにしても","in any case","adv","expr","いずれにしても結果は同じだ。","In any case, the result is the same."],
+["いわば","いわば","so to speak","adv","expr","彼はいわば私の師匠だ。","He is, so to speak, my mentor."],
+["いわゆる","いわゆる","so-called","adv","expr","これがいわゆる不景気だ。","This is the so-called recession."],
+["ある程度","あるていど","to some extent","adv","expr","ある程度の知識が必要だ。","A certain degree of knowledge is necessary."],
+["極めて","きわめて","extremely","adv","expr","この問題は極めて重要だ。","This problem is extremely important."],
+["非常に","ひじょうに","very; extremely","adv","expr","非常に驚いた。","Was extremely surprised."],
+["相当","そうとう","considerably","adv","expr","相当苦労したようだ。","It seems he had considerable difficulty."],
+["家事","かじ","housework","n","daily","家事を分担する。","Share the housework."],
+["掃除","そうじ","cleaning","n","daily","部屋を掃除する。","Clean the room."],
+["洗濯","せんたく","laundry","n","daily","毎朝洗濯をする。","Do laundry every morning."],
+["炊事","すいじ","cooking (housework)","n","daily","炊事は苦手だ。","I'm not good at cooking."],
+["近所","きんじょ","neighborhood","n","daily","近所に新しい店ができた。","A new shop opened in the neighborhood."],
+["騒音","そうおん","noise","n","daily","隣の騒音がひどい。","The neighbor's noise is terrible."],
+["引っ越し","ひっこし","moving house","n","daily","来月引っ越しする。","Moving next month."],
+["家賃","やちん","rent","n","daily","家賃を毎月払う。","Pay rent every month."],
+["ゴミ","ごみ","garbage","n","daily","ゴミを出す日を確認する。","Check the day to take out the garbage."],
+["分別","ぶんべつ","sorting (garbage)","n","daily","ゴミを分別して捨てる。","Sort garbage before throwing it away."],
+["節約","せつやく","saving; frugality","n","daily","電気代を節約する。","Save on electricity bills."],
+["無駄","むだ","waste","n","daily","時間を無駄にしたくない。","Don't want to waste time."],
+["習慣","しゅうかん","habit","n","daily","早起きの習慣をつける。","Develop the habit of waking up early."],
+["日課","にっか","daily routine","n","daily","散歩が私の日課だ。","Walking is my daily routine."],
+["用事","ようじ","errand","n","daily","急な用事ができた。","Suddenly had an errand to run."],
+["予定","よてい","schedule; plan","n","daily","週末の予定を立てる。","Make plans for the weekend."],
+["支度","したく","preparation","n","daily","出かける支度をする。","Get ready to go out."],
+["片付ける","かたづける","to tidy up","v","daily","部屋を片付ける。","Tidy up the room."],
+["済ませる","すませる","to finish; get done","v","daily","宿題を先に済ませる。","Finish homework first."],
+["慣れる","なれる","to get used to","v","daily","新しい生活に慣れてきた。","Getting used to the new life."],
+["世話","せわ","care; looking after","n","daily","犬の世話をする。","Take care of the dog."],
+["留守","るす","absence from home","n","daily","出かけていて留守だった。","Was out, so nobody was home."],
+["近況","きんきょう","recent situation; news","n","daily","友人に近況を伝える。","Tell a friend about my recent situation."],
+["外食","がいしょく","eating out","n","daily","たまには外食したい。","Sometimes want to eat out."],
+["日用品","にちようひん","daily necessities","n","daily","日用品を買いに行く。","Go buy daily necessities."],
+["症状","しょうじょう","symptom","n","health","風邪の症状が出ている。","Cold symptoms are showing."],
+["診断","しんだん","diagnosis","n","health","医者に診断してもらう。","Have a doctor diagnose me."],
+["治療","ちりょう","treatment","n","health","早めに治療を受ける。","Receive treatment early."],
+["手術","しゅじゅつ","surgery","n","health","来週手術を受ける。","Will have surgery next week."],
+["入院","にゅういん","hospitalization","n","health","祖母が入院した。","My grandmother was hospitalized."],
+["退院","たいいん","discharge from hospital","n","health","来週退院する予定だ。","Planning to be discharged next week."],
+["通院","つういん","visiting hospital regularly","n","health","毎週通院している。","Visiting the hospital every week."],
+["処方","しょほう","prescription","n","health","薬を処方してもらった。","Was prescribed medicine."],
+["薬局","やっきょく","pharmacy","n","health","薬局で薬を買う。","Buy medicine at the pharmacy."],
+["体質","たいしつ","physical constitution","n","health","太りやすい体質だ。","Have a constitution prone to gaining weight."],
+["疲労","ひろう","fatigue","n","health","疲労がたまっている。","Fatigue is accumulating."],
+["栄養","えいよう","nutrition","n","health","栄養のバランスを考える。","Consider nutritional balance."],
+["免疫","めんえき","immunity","n","health","免疫力を高める。","Boost immunity."],
+["予防","よぼう","prevention","n","health","風邪の予防に気をつける。","Be careful to prevent colds."],
+["感染","かんせん","infection","n","health","ウイルスに感染する。","Get infected with a virus."],
+["回復","かいふく","recovery","n","health","体調が回復してきた。","Physical condition is recovering."],
+["悪化","あっか","worsening","n","health","症状が悪化した。","The symptoms worsened."],
+["慢性","まんせい","chronic","n","health","慢性的な肩こりに悩む。","Suffer from chronic shoulder stiffness."],
+["急性","きゅうせい","acute","n","health","急性の腹痛で病院に行った。","Went to the hospital with acute stomach pain."],
+["健康診断","けんこうしんだん","health checkup","n","health","年に一度健康診断を受ける。","Get a health checkup once a year."],
+["気候","きこう","climate","n","nature","この地域は温暖な気候だ。","This region has a mild climate."],
+["温暖化","おんだんか","global warming","n","nature","地球温暖化が進んでいる。","Global warming is progressing."],
+["湿度","しつど","humidity","n","nature","今日は湿度が高い。","Humidity is high today."],
+["乾燥","かんそう","dryness","n","nature","冬は空気が乾燥する。","The air is dry in winter."],
+["台風","たいふう","typhoon","n","nature","台風が接近している。","A typhoon is approaching."],
+["洪水","こうずい","flood","n","nature","大雨で洪水が起きた。","Heavy rain caused a flood."],
+["干ばつ","かんばつ","drought","n","nature","干ばつで作物が枯れた。","Crops withered due to the drought."],
+["自然災害","しぜんさいがい","natural disaster","n","nature","自然災害に備える。","Prepare for natural disasters."],
+["地震","じしん","earthquake","n","nature","昨夜大きな地震があった。","There was a big earthquake last night."],
+["噴火","ふんか","eruption","n","nature","火山が噴火した。","The volcano erupted."],
+["資源","しげん","resources","n","nature","限られた資源を大切にする。","Value limited resources."],
+["汚染","おせん","pollution","n","nature","海の汚染が問題になっている。","Ocean pollution is becoming a problem."],
+["生態系","せいたいけい","ecosystem","n","nature","生態系のバランスが崩れる。","The balance of the ecosystem collapses."],
+["絶滅","ぜつめつ","extinction","n","nature","その動物は絶滅の危機にある。","That animal is in danger of extinction."],
+["森林","しんりん","forest","n","nature","森林が減少している。","Forests are decreasing."],
+["大気","たいき","atmosphere","n","nature","大気の状態が不安定だ。","The state of the atmosphere is unstable."],
+["土壌","どじょう","soil","n","nature","この土壌は農業に適している。","This soil is suitable for agriculture."],
+["潮","しお","tide","n","nature","潮の流れが速い。","The tidal current is fast."],
+["日差し","ひざし","sunlight","n","nature","今日は日差しが強い。","The sunlight is strong today."],
+["陰る","かげる","to become overcast; darken","v","nature","空が急に陰ってきた。","The sky suddenly became overcast."],
+["交通機関","こうつうきかん","transportation systems","n","travel","交通機関が乱れている。","Transportation systems are disrupted."],
+["渋滞","じゅうたい","traffic jam","n","travel","高速道路が渋滞している。","The highway is congested."],
+["運賃","うんちん","fare","n","travel","電車の運賃が値上がりした。","Train fares went up."],
+["乗り換え","のりかえ","transfer (trains)","n","travel","新宿で乗り換える。","Transfer at Shinjuku."],
+["遅延","ちえん","delay","n","travel","電車の遅延が発生した。","A train delay occurred."],
+["出発","しゅっぱつ","departure","n","travel","朝早く出発する。","Depart early in the morning."],
+["到着","とうちゃく","arrival","n","travel","予定より早く到着した。","Arrived earlier than scheduled."],
+["経由","けいゆ","via; by way of","n","travel","台北経由で行く。","Go via Taipei."],
+["往復","おうふく","round trip","n","travel","往復のチケットを買う。","Buy a round-trip ticket."],
+["片道","かたみち","one way","n","travel","片道切符を買った。","Bought a one-way ticket."],
+["予約","よやく","reservation","n","travel","ホテルを予約する。","Reserve a hotel."],
+["宿泊","しゅくはく","lodging; stay","n","travel","旅館に宿泊する。","Stay at a Japanese inn."],
+["観光","かんこう","sightseeing","n","travel","京都を観光する。","Go sightseeing in Kyoto."],
+["名所","めいしょ","famous place","n","travel","観光名所を巡る。","Visit famous tourist spots."],
+["土産","みやげ","souvenir","n","travel","家族に土産を買う。","Buy souvenirs for the family."],
+["日程","にってい","itinerary","n","travel","旅行の日程を決める。","Decide the travel itinerary."],
+["滞在","たいざい","stay (abroad etc.)","n","travel","一週間台湾に滞在する。","Stay in Taiwan for a week."],
+["入国","にゅうこく","entry into a country","n","travel","日本に入国する。","Enter Japan."],
+["出国","しゅっこく","departure from a country","n","travel","明日出国する予定だ。","Planning to leave the country tomorrow."],
+["税関","ぜいかん","customs","n","travel","税関で荷物を調べられた。","Luggage was checked at customs."],
+["両替","りょうがえ","currency exchange","n","travel","空港で両替する。","Exchange currency at the airport."],
+["案内","あんない","guide; information","n","travel","駅までの道を案内する。","Show the way to the station."],
+["案内所","あんないじょ","information center","n","travel","観光案内所で地図をもらう。","Get a map at the tourist information center."],
+["迷子","まいご","lost child; getting lost","n","travel","子供が迷子になった。","The child got lost."],
+["迷う","まよう","to be lost; hesitate","v","travel","道に迷ってしまった。","Got lost on the way."]
+];
+
+/* =====================  STATE / STORAGE  ===================== */
+let customWords = [];
+let srsState = {};
+let allWords = [];
+let currentTab = 'home';
+let studyQueue = [];
+let studyMode = 'due'; // due | all | new | topic
+let studyTopic = null;
+let currentCard = null;
+let flipped = false;
+let quizScore = {correct:0, total:0};
+let quizCurrent = null;
+let quizAnswered = false;
+let dataLoaded = false;
+let browseTopicFilter = '';
+
+function wordId(prefix, idx){ return prefix + idx; }
+
+function buildAllWords(){
+  allWords = BASE_WORDS.map((w,i)=>({id:wordId('b',i), k:w[0], r:w[1], m:w[2], p:w[3], t:w[4], ej:w[5]||'', en:w[6]||''}))
+    .concat(customWords.map((w)=>({id:w.id, k:w.k, r:w.r, m:w.m, p:w.p||'n', t:w.t||'daily', ej:w.ej||'', en:w.en||''})));
+}
+
+async function loadData(){
+  try{ const r = await window.storage.get('srs-state', false); srsState = r && r.value ? JSON.parse(r.value) : {}; }
+  catch(e){ srsState = {}; }
+  try{ const r = await window.storage.get('custom-words', false); customWords = r && r.value ? JSON.parse(r.value) : []; }
+  catch(e){ customWords = []; }
+  buildAllWords();
+  dataLoaded = true;
+}
+async function saveSrs(){ try{ await window.storage.set('srs-state', JSON.stringify(srsState), false); }catch(e){ console.error('save srs failed', e); } }
+async function saveCustom(){ try{ await window.storage.set('custom-words', JSON.stringify(customWords), false); }catch(e){ console.error('save custom failed', e); } }
+
+function getState(id){
+  if(!srsState[id]) srsState[id] = {ef:2.5, interval:0, reps:0, due:Date.now(), lapses:0, status:'new'};
+  return srsState[id];
+}
+function gradeWord(id, grade){
+  const s = getState(id); const now = Date.now(); const DAY = 86400000;
+  if(grade===0){ s.reps=0; s.interval=0; s.lapses+=1; s.ef=Math.max(1.3, s.ef-0.2); s.due=now+5*60000; s.status='learning'; }
+  else{
+    if(grade===1){ s.interval = s.interval? Math.round(s.interval*1.2):1; s.ef=Math.max(1.3, s.ef-0.15); }
+    else if(grade===2){ if(s.reps===0) s.interval=1; else if(s.reps===1) s.interval=3; else s.interval=Math.max(1, Math.round(s.interval*s.ef)); }
+    else if(grade===3){ s.interval = s.reps===0 ? 4 : Math.max(1, Math.round(s.interval*s.ef*1.3)); s.ef += 0.15; }
+    s.reps += 1; s.due = now + s.interval*DAY;
+    if(s.interval>=60 || s.reps>=8) s.status='mastered';
+    else if(s.interval>=14) s.status='review';
+    else s.status='learning';
+  }
+  saveSrs();
+}
+function counts(list){
+  const src = list || allWords; const now = Date.now();
+  let nw=0, learning=0, review=0, mastered=0, due=0;
+  src.forEach(w=>{
+    const s = srsState[w.id];
+    if(!s || s.status==='new'){ nw++; return; }
+    if(s.status==='mastered') mastered++; else if(s.status==='review') review++; else learning++;
+    if(s.due<=now) due++;
+  });
+  return {nw, learning, review, mastered, due:due+nw};
+}
+function topicCounts(){
+  const map = {};
+  Object.keys(TOPICS).forEach(k=>map[k]={total:0, mastered:0});
+  allWords.forEach(w=>{
+    if(!map[w.t]) map[w.t]={total:0, mastered:0};
+    map[w.t].total++;
+    const s = srsState[w.id];
+    if(s && s.status==='mastered') map[w.t].mastered++;
+  });
+  return map;
+}
+
+/* =====================  SPEECH  ===================== */
+let voicesReady = false;
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = ()=>{ voicesReady = true; };
+}
+function speak(text){
+  if(!('speechSynthesis' in window)){ showToast('Speech not supported in this browser'); return; }
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'ja-JP'; u.rate = 0.88; u.pitch = 1;
+    const voices = speechSynthesis.getVoices();
+    const jaVoice = voices.find(v=>v.lang && v.lang.startsWith('ja'));
+    if(jaVoice) u.voice = jaVoice;
+    speechSynthesis.speak(u);
+  }catch(e){ console.error('speech error', e); }
+}
+
+/* =====================  RENDER  ===================== */
+function root(){ return document.getElementById('root'); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function posLabel(p){ return {n:'noun', v:'verb', adj:'adjective', adv:'adverb'}[p] || p; }
+
+function render(){
+  if(!dataLoaded){ root().innerHTML = '<div class="wrap"><p class="muted">Loading your word desk…</p></div>'; return; }
+  const c = counts();
+  let body = '';
+  if(currentTab==='home') body = renderHome(c);
+  else if(currentTab==='study') body = renderStudy();
+  else if(currentTab==='topics') body = renderTopics();
+  else if(currentTab==='browse') body = renderBrowse();
+  else if(currentTab==='quiz') body = renderQuiz();
+  else if(currentTab==='add') body = renderAdd();
+
+  root().innerHTML = `
+    <div class="wrap">
+      <header class="top">
+        <div class="wordmark"><h1>語彙帖</h1><span class="sub">N2 Vocabulary Desk</span></div>
+        <nav class="tabs">
+          <button data-tab="home" class="${currentTab==='home'?'active':''}">Home</button>
+          <button data-tab="study" class="${currentTab==='study'?'active':''}">Study</button>
+          <button data-tab="topics" class="${currentTab==='topics'?'active':''}">Topics</button>
+          <button data-tab="quiz" class="${currentTab==='quiz'?'active':''}">Quiz</button>
+          <button data-tab="browse" class="${currentTab==='browse'?'active':''}">単語帳</button>
+          <button data-tab="add" class="${currentTab==='add'?'active':''}">Add</button>
+        </nav>
+      </header>
+      ${body}
+    </div>`;
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.onclick = ()=>{ currentTab=b.dataset.tab; flipped=false; currentCard=null; quizCurrent=null; if(currentTab==='study'){studyMode='due'; studyTopic=null; studyQueue=[];} render(); };
+  });
+  attachTabHandlers();
+}
+
+function renderHome(c){
+  const mastered = c.mastered;
+  return `
+    <div class="stats-row">
+      <div class="stat due"><div class="num">${c.due}</div><div class="lbl-jp">復習</div><div class="lbl-en">Due now</div></div>
+      <div class="stat"><div class="num">${c.learning}</div><div class="lbl-jp">学習中</div><div class="lbl-en">Learning</div></div>
+      <div class="stat"><div class="num">${c.review}</div><div class="lbl-jp">定着</div><div class="lbl-en">In review</div></div>
+      <div class="stat mastered"><div class="num">${mastered}</div><div class="lbl-jp">習得</div><div class="lbl-en">Mastered</div></div>
+    </div>
+    ${mastered>0 ? `<div class="panel" style="text-align:center;"><div class="hanko big">習得</div><div class="muted">${mastered} word${mastered===1?'':'s'} stamped as mastered. Nice work.</div></div>` : ''}
+    <button class="cta" id="startDue" ${c.due===0?'disabled':''}>Start Review — ${c.due} due</button>
+    <button class="cta secondary" id="startAll">Browse Flashcards (all ${allWords.length} words)</button>
+    <button class="cta secondary" id="goTopics">Study by Topic / Situation</button>
+    <div class="panel">
+      <h2>How this works</h2>
+      <p class="muted">Flip each card, listen with the 🔊 button, and grade how well you knew it — the desk reschedules that word using spaced repetition. Every word has one example sentence, a topic tag, and audio via your browser's built-in text-to-speech. Use Quiz for a lighter multiple-choice pass, Topics to focus on a situation (travel, health, work…), and Add to paste in your own words.</p>
+    </div>`;
+}
+
+function pickQueue(mode, topic){
+  const now = Date.now();
+  let pool = allWords.slice();
+  if(topic) pool = pool.filter(w=>w.t===topic);
+  if(mode==='due') pool = pool.filter(w=>{ const s=srsState[w.id]; return !s || s.status==='new' || s.due<=now; });
+  else if(mode==='new') pool = pool.filter(w=>{ const s=srsState[w.id]; return !s || s.status==='new'; });
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  return pool;
+}
+
+function renderStudy(){
+  if(!studyQueue.length && !currentCard){ studyQueue = pickQueue(studyMode, studyTopic); currentCard = studyQueue.shift(); }
+  if(!currentCard){
+    return `<div class="empty-state"><div class="kanji-big">完</div><p>Nothing left to study right now — nicely done.</p>
+      <button class="cta secondary" id="studyAllBtn" style="max-width:280px;margin:14px auto 0;">Study All Words Anyway</button></div>`;
+  }
+  const total = studyQueue.length + 1;
+  const topicLabel = studyTopic ? `${TOPICS[studyTopic].jp} · ${TOPICS[studyTopic].en}` : 'All words';
+  return `
+    <div class="stage">
+      <div class="topic-banner">${esc(topicLabel)}</div>
+      <div class="progress">${total} word${total===1?'':'s'} remaining in this session</div>
+      <div class="card-scene">
+        <div class="card ${flipped?'flipped':''}" id="flashcard">
+          <div class="face front">
+            <div class="chip-row"><span class="pos-chip">${posLabel(currentCard.p)}</span><span class="topic-chip">${esc(TOPICS[currentCard.t]?TOPICS[currentCard.t].jp:currentCard.t)}</span></div>
+            <div class="kanji-row"><div class="kanji-big">${esc(currentCard.k)}</div><button class="spk-btn" id="spkFront" title="Play pronunciation">🔊</button></div>
+            <div class="hint">tap card to reveal</div>
+          </div>
+          <div class="face back">
+            <div class="chip-row"><span class="pos-chip">${posLabel(currentCard.p)}</span><span class="topic-chip">${esc(TOPICS[currentCard.t]?TOPICS[currentCard.t].jp:currentCard.t)}</span></div>
+            <div class="kana-sub">${esc(currentCard.r)}</div>
+            <div class="meaning-big">${esc(currentCard.m)}</div>
+            ${currentCard.ej ? `<div class="example-box">
+              <div class="example-jp"><span>${esc(currentCard.ej)}</span><button class="spk-btn" id="spkBack" title="Play sentence" style="color:var(--ink);">🔊</button></div>
+              <div class="example-en">${esc(currentCard.en)}</div>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>
+      ${flipped ? `
+      <div class="grade-row">
+        <button class="g-again" data-g="0">Again<span class="grade-sub">forgot it</span></button>
+        <button class="g-hard" data-g="1">Hard<span class="grade-sub">tough recall</span></button>
+        <button class="g-good" data-g="2">Good<span class="grade-sub">got it</span></button>
+        <button class="g-easy" data-g="3">Easy<span class="grade-sub">instant</span></button>
+      </div>` : `<p class="flip-tip">Click the card to see the reading, meaning, and example.</p>`}
+    </div>`;
+}
+
+function renderTopics(){
+  const tc = topicCounts();
+  const tiles = Object.keys(TOPICS).map(code=>{
+    const info = TOPICS[code]; const cnt = tc[code] || {total:0,mastered:0};
+    return `<button class="topic-tile" data-topic="${code}">
+      <div class="tjp">${esc(info.jp)}</div>
+      <div class="ten">${esc(info.en)}</div>
+      <div class="tct">${cnt.total} words${cnt.mastered? ` · ${cnt.mastered} mastered`:''}</div>
+    </button>`;
+  }).join('');
+  return `
+    <div class="panel"><h2>Study by Topic / Situation</h2><p class="muted">Pick a topic to study just those words — due words first, then the rest of the set.</p></div>
+    <div class="topic-grid">${tiles}</div>`;
+}
+
+function renderQuiz(){
+  if(!quizCurrent){ const pool = allWords; quizCurrent = pool[Math.floor(Math.random()*pool.length)]; quizAnswered = false; }
+  const correct = quizCurrent;
+  let distractors = allWords.filter(w=>w.id!==correct.id);
+  for(let i=distractors.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [distractors[i],distractors[j]]=[distractors[j],distractors[i]]; }
+  distractors = distractors.slice(0,3);
+  let options = [correct, ...distractors];
+  if(!quizCurrent._opts){
+    for(let i=options.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [options[i],options[j]]=[options[j],options[i]]; }
+    quizCurrent._opts = options;
+  } else { options = quizCurrent._opts; }
+  const pct = quizScore.total ? Math.round(100*quizScore.correct/quizScore.total) : 0;
+  return `
+    <div class="quiz-head"><span class="muted">Multiple choice</span><span class="score-chip">${quizScore.correct} / ${quizScore.total} correct (${pct}%)</span></div>
+    <div class="quiz-card">
+      <div class="chip-row"><span class="pos-chip">${posLabel(correct.p)}</span><span class="topic-chip">${esc(TOPICS[correct.t]?TOPICS[correct.t].jp:correct.t)}</span></div>
+      <div class="kanji-row" style="justify-content:center;"><div class="kana-top" style="margin:0 8px 0 0;">${esc(correct.r)}</div></div>
+      <div class="kanji-row" style="justify-content:center;"><div class="kanji-big">${esc(correct.k)}</div><button class="spk-btn" id="spkQuiz" title="Play pronunciation">🔊</button></div>
+      ${quizAnswered && correct.ej ? `<div class="quiz-example">${esc(correct.ej)}<br>${esc(correct.en)}</div>` : ''}
+    </div>
+    <div class="quiz-options">
+      ${options.map((o,i)=>`<button data-id="${o.id}" data-idx="${i}" ${quizAnswered?'disabled':''} class="${quizAnswered && o.id===correct.id?'correct':''} ${quizAnswered && o.id!==correct.id && o._picked?'wrong':''}">${esc(o.m)}</button>`).join('')}
+    </div>
+    ${quizAnswered ? `<button class="cta" id="nextQuiz" style="margin-top:16px;">Next Word</button>` : ''}`;
+}
+
+function renderBrowse(){
+  const q = (window.__browseQuery||'').toLowerCase();
+  let filtered = allWords.filter(w=> !q || w.k.includes(q) || w.r.includes(q) || w.m.toLowerCase().includes(q));
+  if(browseTopicFilter) filtered = filtered.filter(w=>w.t===browseTopicFilter);
+  const rows = filtered.slice(0,500).map(w=>{
+    const s = srsState[w.id]; const status = s ? s.status : 'new';
+    return `<div class="word-row">
+      <span class="badge b-${status}"></span>
+      <span class="k">${esc(w.k)}</span>
+      <span class="r">${esc(w.r)}</span>
+      <span class="m">${esc(w.m)}</span>
+      <button class="spk-mini" data-speak="${esc(w.k)}" title="Play">🔊</button>
+      ${status==='mastered' ? '<span class="mini-hanko">習</span>' : ''}
+    </div>`;
+  }).join('');
+  const topicOptions = `<option value="">All topics</option>` + Object.keys(TOPICS).map(code=>`<option value="${code}" ${browseTopicFilter===code?'selected':''}>${esc(TOPICS[code].jp)}</option>`).join('');
+  return `
+    <div class="filter-row">
+      <input class="search-bar" id="browseSearch" placeholder="Search kanji, kana, or meaning…" value="${esc(window.__browseQuery||'')}">
+      <select class="topic-select" id="browseTopicSelect">${topicOptions}</select>
+    </div>
+    <div class="panel" style="padding:6px 14px;">
+      ${filtered.length? rows : '<p class="muted" style="padding:14px 0;">No words match that search.</p>'}
+    </div>
+    <p class="muted">${filtered.length} of ${allWords.length} words shown.</p>`;
+}
+
+function renderAdd(){
+  const topicOptions = Object.keys(TOPICS).map(code=>`<option value="${code}">${esc(TOPICS[code].jp)} — ${esc(TOPICS[code].en)}</option>`).join('');
+  return `
+    <div class="panel">
+      <h2>Add your own words</h2>
+      <p class="muted">One word per line: <code>kanji,kana,meaning,pos,example_jp,example_en</code> — pos is n/v/adj/adv. The last two (example sentence) are optional. Example:<br>
+      皮肉,ひにく,irony; sarcasm,n,彼の発言は皮肉だった。,His remark was ironic.</p>
+      <select class="topic-picker" id="addTopicSelect">${topicOptions}</select>
+      <textarea class="add-input" id="addInput" placeholder="皮肉,ひにく,irony; sarcasm,n,彼の発言は皮肉だった。,His remark was ironic."></textarea>
+      <button class="cta" id="addBtn">Add Words to Selected Topic</button>
+    </div>
+    <div class="panel"><h2>Your custom words</h2><p class="muted">${customWords.length} word${customWords.length===1?'':'s'} added so far.</p></div>`;
+}
+
+/* =====================  EVENT HANDLERS  ===================== */
+function attachTabHandlers(){
+  if(currentTab==='home'){
+    const btnDue=document.getElementById('startDue'), btnAll=document.getElementById('startAll'), btnTopics=document.getElementById('goTopics');
+    if(btnDue) btnDue.onclick=()=>{ studyMode='due'; studyTopic=null; studyQueue=[]; currentCard=null; flipped=false; currentTab='study'; render(); };
+    if(btnAll) btnAll.onclick=()=>{ studyMode='all'; studyTopic=null; studyQueue=[]; currentCard=null; flipped=false; currentTab='study'; render(); };
+    if(btnTopics) btnTopics.onclick=()=>{ currentTab='topics'; render(); };
+  }
+  if(currentTab==='study'){
+    const cardEl=document.getElementById('flashcard');
+    if(cardEl) cardEl.onclick=(e)=>{ if(e.target.closest('.spk-btn')) return; flipped=!flipped; render(); };
+    const spkFront=document.getElementById('spkFront');
+    if(spkFront) spkFront.onclick=(e)=>{ e.stopPropagation(); speak(currentCard.k); };
+    const spkBack=document.getElementById('spkBack');
+    if(spkBack) spkBack.onclick=(e)=>{ e.stopPropagation(); speak(currentCard.ej || currentCard.k); };
+    document.querySelectorAll('.grade-row button').forEach(b=>{
+      b.onclick=(e)=>{ e.stopPropagation(); const g=parseInt(b.dataset.g,10); gradeWord(currentCard.id, g);
+        currentCard = studyQueue.shift() || null; flipped=false; render(); };
+    });
+    const allBtn=document.getElementById('studyAllBtn');
+    if(allBtn) allBtn.onclick=()=>{ studyMode='all'; studyTopic=null; studyQueue=[]; currentCard=null; flipped=false; render(); };
+  }
+  if(currentTab==='topics'){
+    document.querySelectorAll('.topic-tile').forEach(t=>{
+      t.onclick=()=>{ studyMode='due'; studyTopic=t.dataset.topic; studyQueue=[]; currentCard=null; flipped=false; currentTab='study'; render(); };
+    });
+  }
+  if(currentTab==='quiz'){
+    const spkQuiz=document.getElementById('spkQuiz');
+    if(spkQuiz) spkQuiz.onclick=()=>{ speak(quizCurrent.k); };
+    document.querySelectorAll('.quiz-options button').forEach(b=>{
+      b.onclick=()=>{
+        if(quizAnswered) return; quizAnswered=true;
+        const chosenId=b.dataset.id;
+        quizCurrent._opts.forEach(o=>{ if(o.id===chosenId) o._picked=true; });
+        quizScore.total+=1;
+        if(chosenId===quizCurrent.id){ quizScore.correct+=1; gradeWord(quizCurrent.id, 2); }
+        else{ gradeWord(quizCurrent.id, 0); }
+        render();
+      };
+    });
+    const next=document.getElementById('nextQuiz');
+    if(next) next.onclick=()=>{ quizCurrent=null; quizAnswered=false; render(); };
+  }
+  if(currentTab==='browse'){
+    const s=document.getElementById('browseSearch');
+    if(s){ s.oninput=()=>{ window.__browseQuery=s.value; renderBrowseOnly(); }; s.focus(); s.selectionStart=s.selectionEnd=s.value.length; }
+    const sel=document.getElementById('browseTopicSelect');
+    if(sel){ sel.onchange=()=>{ browseTopicFilter=sel.value; renderBrowseOnly(); }; }
+    document.querySelectorAll('[data-speak]').forEach(b=>{ b.onclick=()=>{ speak(b.dataset.speak); }; });
+  }
+  if(currentTab==='add'){
+    const btn=document.getElementById('addBtn');
+    if(btn) btn.onclick=async ()=>{
+      const raw=document.getElementById('addInput').value;
+      const topic=document.getElementById('addTopicSelect').value;
+      const lines=raw.split('\\n').map(l=>l.trim()).filter(Boolean);
+      let added=0;
+      lines.forEach(line=>{
+        const parts=line.split(',').map(p=>p.trim());
+        if(parts.length>=3){
+          const [k,r,m,p,ej,en]=parts;
+          customWords.push({id:'c'+Date.now()+Math.random().toString(36).slice(2,7), k, r, m, p:(p||'n'), t:topic, ej:ej||'', en:en||''});
+          added++;
+        }
+      });
+      if(added>0){ await saveCustom(); buildAllWords(); showToast(`Added ${added} word${added===1?'':'s'} to ${TOPICS[topic].jp}.`); document.getElementById('addInput').value=''; render(); }
+      else{ showToast('No valid lines found — use kanji,kana,meaning'); }
+    };
+  }
+}
+
+function renderBrowseOnly(){
+  const wrap=document.querySelector('#root'); const header=wrap.querySelector('header.top'); const full=renderBrowse();
+  const oldSearch=document.getElementById('browseSearch'); const cursorPos=oldSearch?oldSearch.selectionStart:null;
+  wrap.innerHTML = header.outerHTML + full;
+  const newSearch=document.getElementById('browseSearch');
+  if(newSearch){ newSearch.oninput=()=>{ window.__browseQuery=newSearch.value; renderBrowseOnly(); }; newSearch.focus(); if(cursorPos!==null) newSearch.selectionStart=newSearch.selectionEnd=cursorPos; }
+  const sel=document.getElementById('browseTopicSelect');
+  if(sel){ sel.onchange=()=>{ browseTopicFilter=sel.value; renderBrowseOnly(); }; }
+  document.querySelectorAll('[data-speak]').forEach(b=>{ b.onclick=()=>{ speak(b.dataset.speak); }; });
+  document.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.onclick=()=>{ currentTab=b.dataset.tab; flipped=false; currentCard=null; quizCurrent=null; render(); };
+  });
+}
+
+function showToast(msg){
+  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 2600);
+}
+
+/* =====================  INIT  ===================== */
+(async function init(){ await loadData(); render(); })();
+</script>
+</body>
+</html>
