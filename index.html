@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<title>語彙帖 — N2 Vocabulary Desk</title>
+<title>日語單字學習 — N2 Vocabulary Desk</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="語彙帖">
-<meta name="theme-color" content="#E7E2D4">
+<meta name="apple-mobile-web-app-title" content="日語單字學習">
+<meta name="theme-color" content="#FFFFFF">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#F5EFDD; --paper-deep:#ECE3C9; --ink:#20293A; --ink-soft:#4B5A6E;
+    --paper:#FFFFFF; --paper-deep:#F4F1EA; --ink:#20293A; --ink-soft:#4B5A6E;
     --indigo:#33506E; --indigo-soft:#6E8CA6; --line:#C7BFA8; --seal:#B8401B;
     --seal-soft:#D9714B; --gold:#A9812F; --card-back:#1C2A3D; --card-back-2:#233650;
     --good:#3E6E4E;
@@ -38,7 +38,6 @@
   body{margin:0;padding:0;background:transparent;}
   html{-webkit-text-size-adjust:100%;}
   #app{font-family:var(--font-body);color:var(--ink);background:var(--paper);position:relative;overflow-x:hidden;
-    background-image:repeating-linear-gradient(0deg, rgba(32,41,58,0.025) 0px, rgba(32,41,58,0.025) 1px, transparent 1px, transparent 34px);
     min-height:100vh;min-height:100dvh;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(env(safe-area-inset-bottom) + 60px) env(safe-area-inset-left);}
   #app::before, #app::after{content:'';position:absolute;border-radius:50%;filter:blur(2px);opacity:0.5;z-index:0;pointer-events:none;}
@@ -50,7 +49,7 @@
     border-image:linear-gradient(90deg,var(--coral),var(--amber),var(--teal),var(--blue),var(--plum)) 1;
     padding-bottom:14px;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
   .wordmark{display:flex;align-items:baseline;gap:12px;}
-  .wordmark h1{font-family:var(--font-display);font-weight:700;font-size:30px;margin:0;letter-spacing:0.04em;}
+  .wordmark h1{font-family:var(--font-zh);font-weight:700;font-size:26px;margin:0;letter-spacing:0.02em;}
   .wordmark .sub{font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--ink-soft);}
   nav.tabs{display:flex;gap:2px;background:var(--paper-deep);border:1px solid var(--line);border-radius:8px;padding:3px;overflow-x:auto;}
   nav.tabs button{font-family:var(--font-body);font-weight:700;font-size:13px;background:transparent;border:none;
@@ -767,6 +766,40 @@ function speak(text){
   }catch(e){ console.error('speech error', e); }
 }
 
+/* =====================  QUIZ SOUND EFFECTS  ===================== */
+let audioCtx = null;
+function getAudioCtx(){
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    audioCtx = new AC();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, startTime, duration, type, gainPeak){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.type = type || 'sine'; osc.frequency.setValueAtTime(freq, startTime);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(gainPeak || 0.18, startTime + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(startTime); osc.stop(startTime + duration + 0.02);
+}
+function playCorrectSound(){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  const t = ctx.currentTime;
+  playTone(659.25, t, 0.14, 'sine', 0.16);
+  playTone(987.77, t + 0.1, 0.22, 'sine', 0.16);
+}
+function playWrongSound(){
+  const ctx = getAudioCtx(); if(!ctx) return;
+  const t = ctx.currentTime;
+  playTone(220, t, 0.22, 'sawtooth', 0.11);
+  playTone(174.6, t + 0.09, 0.24, 'sawtooth', 0.11);
+}
+
 /* =====================  RENDER  ===================== */
 function root(){ return document.getElementById('root'); }
 function esc(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -786,7 +819,7 @@ function render(){
   root().innerHTML = `
     <div class="wrap">
       <header class="top">
-        <div class="wordmark"><h1>語彙帖</h1><span class="sub">N2 Vocabulary Desk</span></div>
+        <div class="wordmark"><h1>日語單字學習</h1><span class="sub">N2 Vocabulary Desk</span></div>
         <nav class="tabs">
           <button data-tab="home" class="${currentTab==='home'?'active':''}">Home</button>
           <button data-tab="study" class="${currentTab==='study'?'active':''}">Study</button>
@@ -1023,8 +1056,8 @@ function attachTabHandlers(){
         const chosenId=b.dataset.id;
         quizCurrent._opts.forEach(o=>{ if(o.id===chosenId) o._picked=true; });
         quizScore.total+=1;
-        if(chosenId===quizCurrent.id){ quizScore.correct+=1; gradeWord(quizCurrent.id, 2); }
-        else{ gradeWord(quizCurrent.id, 0); }
+        if(chosenId===quizCurrent.id){ quizScore.correct+=1; gradeWord(quizCurrent.id, 2); playCorrectSound(); }
+        else{ gradeWord(quizCurrent.id, 0); playWrongSound(); }
         render();
       };
     });
